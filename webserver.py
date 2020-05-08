@@ -19,6 +19,7 @@ def list_dir(rootDir, dirPath):
     return '<html><body><ul>' + ''.join(listing) + '</ul></body><html>'
 
 class myRequestHandler(BaseHTTPRequestHandler):
+
     def do_GET(self):
         try:
             
@@ -29,21 +30,8 @@ class myRequestHandler(BaseHTTPRequestHandler):
             #path ends with /random 
 
             if self.path.endswith('/random'):
-                image_path = get_random_image(root + '/html/images')
-                print(image_path)
-                statinfo = os.stat(image_path)
-                img_size = statinfo.st_size
-                print(img_size)
-
-                self.send_response(200)
-                self.send_header("Content-type", "image/jpg")
-                self.send_header("Content-length", img_size)
-                self.end_headers()
-
-
-                img=open(image_path, 'rb')
-                self.wfile.write(img.read())
-                img.close()
+                image_path = get_random_image(root + '/html/images')         
+                self.send_path_content(image_path,"image/jpg")
 
             #check if path exists 
                
@@ -51,23 +39,10 @@ class myRequestHandler(BaseHTTPRequestHandler):
                 msg = "File {} not found".format(self.path)
                 self.send_error(404,msg)
 
-            
             #path leads to a file
 
             elif os.path.isfile(full_path):
-                statinfo = os.stat(full_path)
-                site_size = statinfo.st_size
-
-                self.send_response(200)
-                self.send_header("Content-type", "text/html")
-                self.send_header("Content-Length",site_size)
-                self.end_headers()
-
-
-                site=open(full_path,'rb')
-                content=site.read()
-                self.wfile.write(content)
-                site.close()
+                self.send_path_ content(full_path,None)
 
             #path leads to a dir
             
@@ -77,33 +52,51 @@ class myRequestHandler(BaseHTTPRequestHandler):
 
                 if os.path.exists(full_path + '/index.html'):
                     full_path = full_path + '/index.html'
-                    statinfo = os.stat(full_path)
-                    site_size = statinfo.st_size
-
-                    self.send_response(200)
-                    self.send_header("Content-type", "text/html")
-                    self.send_header("Content-Length",site_size)
-                    self.end_headers()
-
-
-                    site=open(full_path,'rb')
-                    content=site.read()
-                    self.wfile.write(content)
-                    site.close()
+                    self.send_path_content(full_path,"text/html")
 
                 # if there is no index.html you should do a listing of all files in the directory 
 
-                else:
+                else:   
                     site = list_dir(root , self.path)
-                    self.send_response(200)
-                    self.send_header("Content-type", "text/html")
-                    self.end_headers()
-
-                    self.wfile.write(site.encode())
-                 
+                    self.send_content(site.encode(), "text/html")
 
         except IOError as err :
             self.send_error(404,err)
+
+    def send_content(self, content, contentType):
+        try:
+            
+            self.send_response(200)
+            self.send_header("Content-type", contentType)
+            self.send_header("Content-Length",str(len(content)))
+            self.end_headers()
+
+            self.wfile.write(content)
+
+        except IOError as err :
+            self.send_error(404,err)
+
+
+
+    def send_path_content(self, path, contentType):
+        try:
+            statinfo = os.stat(path)
+            size = statinfo.st_size
+
+            self.send_response(200)
+            if contentType is not None:
+                self.send_header("Content-type", contentType)
+            self.send_header("Content-Length",size)
+            self.end_headers()
+
+            site=open(path,'rb')
+            content=site.read()
+            self.wfile.write(content)
+            site.close()
+            
+        except IOError as err :
+            self.send_error(404,err)
+
 
 
 
