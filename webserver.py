@@ -3,6 +3,8 @@ from http.server import HTTPServer,BaseHTTPRequestHandler
 import os
 import random
 
+#choosing random image in a given folder
+
 def get_random_image(imageDirPath):
     print(imageDirPath)
     image_path_list = ['/' + image for image in os.listdir(imageDirPath)
@@ -17,6 +19,8 @@ class myRequestHandler(BaseHTTPRequestHandler):
             #current/working/directory
             root= os.getcwd()
             full_path = root + self.path
+
+            #path ends with /random 
 
             if self.path.endswith("/random"):
                 image_path = get_random_image(root + '/html/images')
@@ -34,12 +38,53 @@ class myRequestHandler(BaseHTTPRequestHandler):
                 img=open(image_path, 'rb')
                 self.wfile.write(img.read())
                 img.close()
+
+            #check if path exists 
                
             elif not os.path.exists(full_path):
                 msg = "File {} not found".format(self.path)
                 self.send_error(404,msg)
-            #elif os.path.isfile(full_path)
 
+            
+            #path leads to a file
+
+            elif os.path.isfile(full_path):
+                statinfo = os.stat(full_path)
+                site_size = statinfo.st_size
+
+                self.send_response(200)
+                self.send_header("Content-type", "text/html")
+                self.send_header("Content-Length",site_size)
+                self.end_headers()
+
+
+                site=open(full_path,'rb')
+                content=site.read()
+                self.wfile.write(content)
+                site.close()
+
+            #path leads to a dir
+            
+            elif os.path.isdir(full_path):
+
+                #if there is a index.html in this directory open it. 
+
+                if os.path.exists(full_path + '/index.html'):
+                    full_path = full_path + '/index.html'
+                    statinfo = os.stat(full_path)
+                    site_size = statinfo.st_size
+    
+                    self.send_response(200)
+                    self.send_header("Content-type", "text/html")
+                    self.send_header("Content-Length",site_size)
+                    self.end_headers()
+    
+    
+                    site=open(full_path,'rb')
+                    content=site.read()
+                    self.wfile.write(content)
+                    site.close()
+                 
 
         except IOError as err :
             self.send_error(404,err)
