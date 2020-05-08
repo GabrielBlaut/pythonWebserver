@@ -12,6 +12,11 @@ def get_random_image(imageDirPath):
     print(image_path_list)           
     return imageDirPath + random.choice(image_path_list)
 
+def list_dir(dirPath):
+    listing= [ '<li>{0}</li>'.format(directory) for directory in os.listdir(dirPath)
+                if not directory.startswith('.') ]
+    return '<html><body><ul>' + ''.join(listing) + '</ul></body><html>'
+
 class myRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
@@ -22,7 +27,7 @@ class myRequestHandler(BaseHTTPRequestHandler):
 
             #path ends with /random 
 
-            if self.path.endswith("/random"):
+            if self.path.endswith('/random'):
                 image_path = get_random_image(root + '/html/images')
                 print(image_path)
                 statinfo = os.stat(image_path)
@@ -73,17 +78,27 @@ class myRequestHandler(BaseHTTPRequestHandler):
                     full_path = full_path + '/index.html'
                     statinfo = os.stat(full_path)
                     site_size = statinfo.st_size
-    
+
                     self.send_response(200)
                     self.send_header("Content-type", "text/html")
                     self.send_header("Content-Length",site_size)
                     self.end_headers()
-    
-    
+
+
                     site=open(full_path,'rb')
                     content=site.read()
                     self.wfile.write(content)
                     site.close()
+
+                # if there is no index.html you should do a listing of all files in the directory 
+
+                else:
+                    site = list_dir(full_path)
+                    self.send_response(200)
+                    self.send_header("Content-type", "text/html")
+                    self.end_headers()
+
+                    self.wfile.write(site.encode())
                  
 
         except IOError as err :
