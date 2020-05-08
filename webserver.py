@@ -12,8 +12,9 @@ def get_random_image(imageDirPath):
     print(image_path_list)           
     return imageDirPath + random.choice(image_path_list)
 
-def list_dir(dirPath):
-    listing= [ '<li>{0}</li>'.format(directory) for directory in os.listdir(dirPath)
+def list_dir(rootDir, dirPath):
+    full_path = rootDir + dirPath
+    listing= [ '<li><a href="{0}/{1}">{1}</a></li>'.format(dirPath, directory) for directory in os.listdir(full_path)
                 if not directory.startswith('.') ]
     return '<html><body><ul>' + ''.join(listing) + '</ul></body><html>'
 
@@ -93,7 +94,7 @@ class myRequestHandler(BaseHTTPRequestHandler):
                 # if there is no index.html you should do a listing of all files in the directory 
 
                 else:
-                    site = list_dir(full_path)
+                    site = list_dir(root , self.path)
                     self.send_response(200)
                     self.send_header("Content-type", "text/html")
                     self.end_headers()
