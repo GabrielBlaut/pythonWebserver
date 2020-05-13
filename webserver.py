@@ -10,7 +10,7 @@ def get_random_image(imageDirPath):
     print(imageDirPath)
     image_path_list = ['/' + image for image in os.listdir(imageDirPath)
                 if not os.path.isdir(imageDirPath+image)]
-    print(image_path_list)           
+    print(image_path_list)         
     return imageDirPath + random.choice(image_path_list)
 
 def list_dir(rootDir, dirPath):
@@ -80,8 +80,6 @@ class myRequestHandler(BaseHTTPRequestHandler):
             
             print(self.headers)
 
-            content_type = self.headers["Content-Type"]
-
 
             if ctype == 'multipart/form-data':
                 print("It is a file")
@@ -148,7 +146,7 @@ def main():
         myServer.serve_forever()
 
     except KeyboardInterrupt:
-        server.socket.close()
+        myServer.socket.close()
 
 if __name__ == "__main__":
     main()
