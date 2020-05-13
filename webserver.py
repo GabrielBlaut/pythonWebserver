@@ -2,6 +2,7 @@
 from http.server import HTTPServer,BaseHTTPRequestHandler
 import os
 import random
+import cgi
 
 #choosing random image in a given folder
 
@@ -14,6 +15,7 @@ def get_random_image(imageDirPath):
 
 def list_dir(rootDir, dirPath):
     full_path = rootDir + dirPath
+    print(dirPath)
     listing= [ '<li><a href="{0}/{1}">{1}</a></li>'.format(dirPath, directory) for directory in os.listdir(full_path)
                 if not directory.startswith('.') ]
     return '<html><body><ul>' + ''.join(listing) + '</ul></body><html>'
@@ -42,7 +44,7 @@ class myRequestHandler(BaseHTTPRequestHandler):
             #path leads to a file
 
             elif os.path.isfile(full_path):
-                self.send_path_ content(full_path,None)
+                self.send_path_content(full_path,None)
 
             #path leads to a dir
             
@@ -62,6 +64,46 @@ class myRequestHandler(BaseHTTPRequestHandler):
 
         except IOError as err :
             self.send_error(404,err)
+
+
+    def do_POST(self):
+        try:
+            #upload a picture
+            ctype, pdict = cgi.parse_header(self.headers.get('Content-Type'))
+            pdict['boundary'] = bytes(pdict['boundary'], "utf-8")
+            content_len = int(self.headers.get('Content-length'))
+            pdict['CONTENT-LENGTH'] = content_len
+            print(ctype)
+            print(pdict)
+            query=cgi.parse_multipart(self.rfile, pdict,encoding="utf-8", errors="replace" )
+            print(query)
+            
+            print(self.headers)
+
+            content_type = self.headers["Content-Type"]
+
+
+            if ctype == 'multipart/form-data':
+                print("It is a file")
+                file_content = query.get("file")[0]
+                print(file_content)
+                f=open("test.txt","wb")
+                f.write(file_content)
+                f.close()
+                post_body=b"File received and uploaded suscessfully"
+
+
+            else:
+                post_body = self.rfile.read(content_len)
+                
+
+
+            msg="received post request:{}\n".format(post_body)
+            self.send_content(msg.encode(), "text/plain; charset=utf-8")
+
+        except IOError as err:
+            self.send_error(404,err)
+
 
     def send_content(self, content, contentType):
         try:
@@ -98,14 +140,11 @@ class myRequestHandler(BaseHTTPRequestHandler):
             self.send_error(404,err)
 
 
-
-
-
 def main():
     try:
         port=8000
         myServer=HTTPServer(('',port),myRequestHandler)
-        print ("webserver running on %s" % port)
+        print ("webserver running on port %s" % port)
         myServer.serve_forever()
 
     except KeyboardInterrupt:
