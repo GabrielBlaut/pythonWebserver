@@ -10,7 +10,7 @@ def get_random_image(imageDirPath):
     print(imageDirPath)
     image_path_list = ['/' + image for image in os.listdir(imageDirPath)
                 if not os.path.isdir(imageDirPath+image)]
-    print(image_path_list)           
+    print(image_path_list)
     return imageDirPath + random.choice(image_path_list)
 
 def list_dir(rootDir, dirPath):
@@ -24,19 +24,19 @@ class myRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         try:
-            
+
             #current/working/directory
             root= os.getcwd()
             full_path = root + self.path
 
-            #path ends with /random 
+            #path ends with /random
 
             if self.path.endswith('/random'):
-                image_path = get_random_image(root + '/html/images')         
+                image_path = get_random_image(root + '/html/images')
                 self.send_path_content(image_path,"image/jpg")
 
-            #check if path exists 
-               
+            #check if path exists
+
             elif not os.path.exists(full_path):
                 msg = "File {} not found".format(self.path)
                 self.send_error(404,msg)
@@ -47,18 +47,18 @@ class myRequestHandler(BaseHTTPRequestHandler):
                 self.send_path_content(full_path,None)
 
             #path leads to a dir
-            
+
             elif os.path.isdir(full_path):
 
-                #if there is a index.html in this directory open it. 
+                #if there is a index.html in this directory open it.
 
                 if os.path.exists(full_path + '/index.html'):
                     full_path = full_path + '/index.html'
                     self.send_path_content(full_path,"text/html")
 
-                # if there is no index.html you should do a listing of all files in the directory 
+                # if there is no index.html you should do a listing of all files in the directory
 
-                else:   
+                else:
                     site = list_dir(root , self.path)
                     self.send_content(site.encode(), "text/html")
 
@@ -77,7 +77,7 @@ class myRequestHandler(BaseHTTPRequestHandler):
             print(pdict)
             query=cgi.parse_multipart(self.rfile, pdict,encoding="utf-8", errors="replace" )
             print(query)
-            
+
             print(self.headers)
 
             content_type = self.headers["Content-Type"]
@@ -95,7 +95,7 @@ class myRequestHandler(BaseHTTPRequestHandler):
 
             else:
                 post_body = self.rfile.read(content_len)
-                
+
 
 
             msg="received post request:{}\n".format(post_body)
@@ -107,7 +107,7 @@ class myRequestHandler(BaseHTTPRequestHandler):
 
     def send_content(self, content, contentType):
         try:
-            
+
             self.send_response(200)
             self.send_header("Content-type", contentType)
             self.send_header("Content-Length",str(len(content)))
@@ -135,7 +135,7 @@ class myRequestHandler(BaseHTTPRequestHandler):
             content=site.read()
             self.wfile.write(content)
             site.close()
-            
+
         except IOError as err :
             self.send_error(404,err)
 
