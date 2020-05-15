@@ -4,12 +4,48 @@ import os
 import random
 import cgi
 
+image_dir = 'html/images/'
 
 
+def upload_image(header  , rfile):
+    """Uploads a file if it ends with .jpeg """
+    ctype= cgi.parse_header(header.get('Content-Type'))[0]
+
+    if ctype == 'multipart/form-data':   
+
+        form = cgi.FieldStorage(fp=rfile, 
+                                headers=header, 
+                                #keep_blank_values=1,
+                                environ={'REQUEST_METHOD':'POST',
+                               'CONTENT_TYPE':ctype,})
+
+        file_name = generate_image_name(image_dir)
+
+        file_content = form['file'].file.read()
+        print(file_content)
+
+        file_pointer = open(image_dir + file_name, "wb")   
+        file_pointer.write(file_content)
+        file_pointer.close()
+
+        return 1
+    else:
+        return -1
+
+def generate_image_name(path):
+    '''generates a random filename'''
+    value = 0
+    while value < 1234567 :
+        value = value + random.randint(12345,123456)
+        if not os.path.isfile(path + str(value)):
+            return str(value) + ".jpeg"
+
+    #exception raise
+   
 def get_random_image(image_dir_path):
     '''choosing random image in a given folder'''
     print(image_dir_path)
-    image_path_list = ['/' + image for image in os.listdir(image_dir_path)
+    image_path_list = [image for image in os.listdir(image_dir_path)
                        if not os.path.isdir(image_dir_path+image)]
     print(image_path_list)
     return image_dir_path + random.choice(image_path_list)
@@ -31,12 +67,13 @@ class MyRequestHandler(BaseHTTPRequestHandler):
 
             #current/working/directory
             root = os.getcwd()
+            print(root)
             full_path = root + self.path
 
             #path ends with /random
 
             if self.path.endswith('/random'):
-                image_path = get_random_image(root + '/html/images')
+                image_path = get_random_image(root +"/"+ image_dir)
                 self.send_path_content(image_path, "image/jpg")
 
             #check if path exists
@@ -51,6 +88,7 @@ class MyRequestHandler(BaseHTTPRequestHandler):
                 self.send_path_content(full_path, None)
 
             #path leads to a dir
+
 
             elif os.path.isdir(full_path):
 
@@ -69,37 +107,14 @@ class MyRequestHandler(BaseHTTPRequestHandler):
         except IOError as err:
             self.send_error(404, err)
 
-
     def do_POST(self):
         '''implementation of the do_POST method'''
         try:
-            #upload a picture
-            ctype, pdict = cgi.parse_header(self.headers.get('Content-Type'))
-            pdict['boundary'] = bytes(pdict['boundary'], "utf-8")
-            content_len = int(self.headers.get('Content-length'))
-            pdict['CONTENT-LENGTH'] = content_len
-            print(ctype)
-            print(pdict)
-            query = cgi.parse_multipart(self.rfile, pdict, encoding="utf-8", errors="replace")
-            print(query)
-
-            print(self.headers)
-
-
-            if ctype == 'multipart/form-data':
-                print("It is a file")
-                file_content = query.get("file")[0]
-                print(file_content)
-                file_pointer = open("test.txt", "wb")
-                file_pointer.write(file_content)
-                file_pointer.close()
-                post_body = b"File received and uploaded suscessfully"
-
-
+            
+            if upload_image(self.headers,self.rfile):
+                post_body = "File received and uploaded suscessfully"
             else:
-                post_body = self.rfile.read(content_len)
-
-
+                post_body = "This is not an .jpeg file"
 
             msg = "received post request:{}\n".format(post_body)
             self.send_content(msg.encode(), "text/plain; charset=utf-8")
