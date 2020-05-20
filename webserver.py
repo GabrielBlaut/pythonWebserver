@@ -4,7 +4,7 @@ import os
 import random
 import cgi
 
-image_dir = 'html/images/'
+image_dir = 'html/images'
 
 
 def upload_image(header  , rfile):
@@ -24,7 +24,7 @@ def upload_image(header  , rfile):
         file_content = form['file'].file.read()
         print(file_content)
 
-        file_pointer = open(image_dir + file_name, "wb")   
+        file_pointer = open(image_dir + "/" + file_name, "wb")   
         file_pointer.write(file_content)
         file_pointer.close()
 
@@ -44,11 +44,14 @@ def generate_image_name(path):
    
 def get_random_image(image_dir_path):
     '''choosing random image in a given folder'''
-    print(image_dir_path)
+
     image_path_list = [image for image in os.listdir(image_dir_path)
                        if not os.path.isdir(image_dir_path+image)]
-    print(image_path_list)
-    return image_dir_path + random.choice(image_path_list)
+    
+    if not image_path_list:
+        return -1
+    else:
+        return image_dir_path + "/" + random.choice(image_path_list)
 
 def list_dir(root_dir, dir_path):
     '''creating html-webpage with a list of non hidden content'''
