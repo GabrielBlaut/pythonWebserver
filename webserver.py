@@ -166,7 +166,7 @@ class MyRequestHandler(BaseHTTPRequestHandler):
 def main():
     '''Starts Server at port 8000 and closes it after a keyboardinterrupt'''
     try:
-        port = 8000
+        port = 8080
         my_server = HTTPServer(('', port), MyRequestHandler)
         print("webserver running on port %s" % port)
         my_server.serve_forever()
